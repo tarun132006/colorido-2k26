@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact | COLORIDO 2K26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+<header class="page-head"><div class="wrap">
+  <p class="eyebrow" style="color:#94a3b8">COLORIDO 2K26</p>
+  <h1>Contact the team</h1>
+  <p>Questions about registration, events, accommodation or the festival schedule?</p>
+</div></header>
+<section><div class="wrap">
+  <div class="reg">
+    <form class="panel-box" id="contactForm" novalidate>
+      <h2>Send a message</h2>
+      <div class="form-grid">
+        <div><label class="lbl" for="name">Name</label><input class="field" id="name" autocomplete="name"><div class="err" data-for="name"></div></div>
+        <div><label class="lbl" for="email">Email</label><input class="field" id="email" type="email" autocomplete="email"><div class="err" data-for="email"></div></div>
+        <div class="full"><label class="lbl" for="subject">Subject</label><input class="field" id="subject"></div>
+        <div class="full"><label class="lbl" for="body">Message</label><textarea class="field" id="body" rows="6"></textarea><div class="err" data-for="body"></div></div>
+        <div class="full"><button class="btn btn-primary" id="send" type="submit">Send message</button></div>
+      </div>
+    </form>
+    <aside class="panel-box">
+      <h2>Event office</h2>
+      <div class="kv"><span>Festival</span><b>10–12 December 2026</b></div>
+      <div class="kv"><span>Venue</span><b>Main Campus</b></div>
+      <div class="kv"><span>Phone</span><b>+91 90000 00000</b></div>
+      <p class="hint" style="margin-top:14px">For event-specific questions, open the event page and review its rules before contacting the coordinator.</p>
+    </aside>
+  </div>
+</div></section>
+<div id="footer"></div>
+<script src="/js/app.js"></script>
+<script>
+renderChrome("Contact");
+const form = document.getElementById("contactForm");
+const emailRe = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+function clearErrors(){ document.querySelectorAll(".err").forEach(e=>e.textContent=""); }
+form.addEventListener("submit", async (event) => {
+  event.preventDefault(); clearErrors();
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    email: document.getElementById("email").value.trim().toLowerCase(),
+    subject: document.getElementById("subject").value.trim() || null,
+    body: document.getElementById("body").value.trim()
+  };
+  let ok = true;
+  if(data.name.length < 2){ document.querySelector('[data-for="name"]').textContent="Enter your name"; ok=false; }
+  if(!emailRe.test(data.email)){ document.querySelector('[data-for="email"]').textContent="Enter a valid email"; ok=false; }
+  if(data.body.length < 2){ document.querySelector('[data-for="body"]').textContent="Enter your message"; ok=false; }
+  if(!ok) return;
+  const button=document.getElementById("send"); button.disabled=true; button.textContent="Sending…";
+  try { await api("/contact", {method:"POST", body:JSON.stringify(data)}); form.reset(); toast("Message sent successfully."); }
+  catch(e){ toast(e.message); }
+  finally { button.disabled=false; button.textContent="Send message"; }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Register | COLORIDO 2K26</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+
+<header class="page-head"><div class="wrap">
+  <p class="eyebrow" style="color:#94a3b8">COLORIDO 2K26</p>
+  <h1>Registration</h1>
+  <p>Select an event and complete the form. Team leaders register for the whole team.</p>
+</div></header>
+
+<section><div class="wrap">
+
+  <div class="reg" id="formView">
+    <form class="panel-box" id="regForm" novalidate>
+      <div class="form-grid">
+        <div class="full">
+          <label class="lbl" for="event">Event</label>
+          <select class="field" id="event"></select>
+          <div class="err" data-for="event"></div>
+        </div>
+        <div>
+          <label class="lbl" for="pname">Full name</label>
+          <input class="field" id="pname" autocomplete="name">
+          <div class="err" data-for="pname"></div>
+        </div>
+        <div>
+          <label class="lbl" for="email">Email</label>
+          <input class="field" id="email" type="email" autocomplete="email">
+          <div class="err" data-for="email"></div>
+        </div>
+        <div>
+          <label class="lbl" for="phone">Mobile number</label>
+          <input class="field" id="phone" type="tel" placeholder="10-digit number" autocomplete="tel">
+          <div class="err" data-for="phone"></div>
+        </div>
+        <div>
+          <label class="lbl" for="gender">Gender</label>
+          <select class="field" id="gender">
+            <option value="">Select</option><option>Male</option><option>Female</option>
+          </select>
+          <div class="err" data-for="gender"></div>
+        </div>
+        <div class="full">
+          <label class="lbl" for="college">College</label>
+          <input class="field" id="college">
+          <div class="err" data-for="college"></div>
+        </div>
+
+        <div class="full" id="teamBox" hidden>
+          <label class="lbl" for="team">Team name</label>
+          <input class="field" id="team">
+          <div class="err" data-for="team"></div>
+
+          <div style="margin-top:18px">
+            <label class="lbl">Team members</label>
+            <p class="hint" id="teamHint"></p>
+            <div id="members"></div>
+            <div class="err" data-for="members"></div>
+            <button type="button" class="btn btn-outline btn-sm" id="addBtn">Add member</button>
+          </div>
+        </div>
+
+        <div class="full">
+          <button type="submit" class="btn btn-primary" id="submitBtn">Submit registration</button>
+        </div>
+      </div>
+    </form>
+
+    <aside class="panel-box" id="summary">
+      <h2>Event summary</h2>
+      <p class="hint">Select an event to see its details.</p>
+    </aside>
+  </div>
+
+  <div id="doneView" hidden></div>
+
+</div></section>
+
+<div id="footer"></div>
+<script src="/js/app.js"></script>
+<script>
+renderChrome("Register");
+const $ = id => document.getElementById(id);
+let EVENTS = [], cur = null;
+
+/* ---------- setup ---------- */
+function fillSelect() {
+  const opt = e => `<option value="${esc(e.slug)}">${esc(e.name)}${e.division === "sports" ? " (" + esc(e.gender) + ")" : ""}</option>`;
+  const group = (label, div) =>
+    `<optgroup label="${label}">${EVENTS.filter(e => e.division === div).map(opt).join("")}</optgroup>`;
+  $("event").innerHTML = `<option value="">Select an event</option>` + group("Cultural", "cultural") + group("Sports", "sports");
+}
+
+function teamText(e) {
+  if (e.team_max === 1) return "Solo";
+  return e.team_min === e.team_max ? `${e.team_max} members` : `${e.team_min} to ${e.team_max} members`;
+}
+
+function onEventChange() {
+  cur = EVENTS.find(e => e.slug === $("event").value) || null;
+  clearErrors();
+
+  const g = $("gender");
+  g.disabled = false;
+  if (cur && cur.gender === "Boys") { g.value = "Male"; g.disabled = true; }
+  if (cur && cur.gender === "Girls") { g.value = "Female"; g.disabled = true; }
+
+  const team = cur && cur.team_max > 1;
+  $("teamBox").hidden = !team;
+  $("members").innerHTML = "";
+  if (team) {
+    for (let i = 0; i < cur.team_min - 1; i++) addMember();
+    $("teamHint").textContent =
+      `Team size ${cur.team_min} to ${cur.team_max} including you. Add ${cur.team_min - 1} to ${cur.team_max - 1} other members.`;
+  }
+  updateAdd();
+
+  $("summary").innerHTML = cur ? `
+    <h2>${esc(cur.name)}</h2>
+    <span class="tag ${esc(cur.division)}">${esc(cur.category)}</span>
+    <div class="kv"><span>Format</span><b>${teamText(cur)}</b></div>
+    <div class="kv"><span>Day</span><b>Day ${cur.day}</b></div>
+    <div class="kv"><span>Time</span><b>${esc(cur.start_time)}</b></div>
+    <div class="kv"><span>Venue</span><b>${esc(cur.venue)}</b></div>
+    <div class="kv"><span>Entry fee</span><b>${cur.fee ? "₹" + cur.fee : "Free"}</b></div>
+    <a class="link" style="display:block;margin-top:14px;color:var(--violet);font-weight:600" href="/event.html?slug=${esc(cur.slug)}">View rules</a>`
+    : `<h2>Event summary</h2><p class="hint">Select an event to see its details.</p>`;
+}
+
+/* ---------- team members ---------- */
+function memberCount() { return $("members").children.length; }
+
+function addMember(value = "") {
+  if (!cur || memberCount() >= cur.team_max - 1) return;
+  const row = document.createElement("div");
+  row.className = "member-row";
+  row.innerHTML = `<input class="field" placeholder="Member name" aria-label="Member name" value="${esc(value)}">
+                   <button type="button" class="btn btn-outline btn-sm" aria-label="Remove member">Remove</button>`;
+  row.querySelector("button").onclick = () => {
+    if (memberCount() <= cur.team_min - 1) { toast(`This event needs at least ${cur.team_min} members.`); return; }
+    row.remove(); updateAdd();
+  };
+  $("members").appendChild(row);
+  updateAdd();
+}
+function updateAdd() {
+  $("addBtn").disabled = !cur || memberCount() >= cur.team_max - 1;
+}
+
+/* ---------- validation ---------- */
+function clearErrors() {
+  document.querySelectorAll(".err").forEach(e => e.textContent = "");
+  document.querySelectorAll(".field.bad").forEach(e => e.classList.remove("bad"));
+}
+function setErr(key, msg, inputId) {
+  const el = document.querySelector(`.err[data-for="${key}"]`);
+  if (el) el.textContent = msg;
+  if (inputId) $(inputId).classList.add("bad");
+}
+
+function collect() {
+  return {
+    event_slug: $("event").value,
+    name: $("pname").value.trim(),
+    email: $("email").value.trim().toLowerCase(),
+    phone: $("phone").value.trim(),
+    college: $("college").value.trim(),
+    gender: $("gender").value,
+    team_name: $("team").value.trim(),
+    members: [...$("members").querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean),
+    rawMemberRows: memberCount()
+  };
+}
+
+function validate(d) {
+  clearErrors();
+  let ok = true;
+  const bad = (k, m, id) => { setErr(k, m, id); ok = false; };
+
+  if (!d.event_slug) bad("event", "Select an event", "event");
+  if (d.name.length < 2) bad("pname", "Enter your full name", "pname");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) bad("email", "Enter a valid email address", "email");
+  const digits = d.phone.replace(/[\s-]/g, "").replace(/^(\+91|0)/, "");
+  if (!/^[6-9]\d{9}$/.test(digits)) bad("phone", "Enter a valid 10-digit mobile number", "phone");
+  if (d.college.length < 2) bad("college", "Enter your college name", "college");
+  if (!d.gender) bad("gender", "Select gender", "gender");
+
+  if (cur && cur.team_max > 1) {
+    if (!d.team_name) bad("team", "Team name is required", "team");
+    const size = 1 + d.members.length;
+    if (size < cur.team_min || size > cur.team_max)
+      bad("members", `Team size must be between ${cur.team_min} and ${cur.team_max} (you entered ${size})`);
+  }
+  return ok;
+}
+
+/* ---------- submit ---------- */
+$("regForm").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const d = collect();
+  if (!validate(d)) { toast("Please fix the highlighted fields."); return; }
+
+  const btn = $("submitBtn");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  try {
+    const body = { ...d }; delete body.rawMemberRows;
+    if (!(cur.team_max > 1)) { delete body.team_name; body.members = []; }
+    const res = await api("/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, gender: $("gender").value })
+    });
+    showPass(res, d);
+  } catch (e) {
+    toast(e.message);
+    setErr("event", e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Submit registration";
+  }
+});
+
+/* ---------- confirmation ---------- */
+function showPass(res, d) {
+  $("formView").hidden = true;
+  const done = $("doneView");
+  done.hidden = false;
+  done.innerHTML = `
+    <div class="pass">
+      <div class="pass-top"><small>COLORIDO 2K26 · Entry pass</small><h2>${esc(res.event)}</h2></div>
+      <div class="pass-id">${esc(res.reg_id)}</div>
+      <div class="pass-body">
+        <div class="kv"><span>Status</span><b>${esc(res.status)}</b></div>
+        <div class="kv"><span>Name</span><b>${esc(d.name)}</b></div>
+        <div class="kv"><span>College</span><b>${esc(d.college)}</b></div>
+        ${d.team_name ? `<div class="kv"><span>Team</span><b>${esc(d.team_name)} (${1 + d.members.length})</b></div>` : ""}
+        <div class="kv"><span>Day and time</span><b>Day ${cur.day}, ${esc(cur.start_time)}</b></div>
+        <div class="kv"><span>Venue</span><b>${esc(cur.venue)}</b></div>
+        <p class="hint" style="margin-top:14px">Carry a printed or digital copy of this pass and your college ID card.</p>
+        <div class="pass-actions">
+          <button class="btn btn-dark" onclick="window.print()">Print pass</button>
+          <button class="btn btn-outline" id="againBtn">Register for another event</button>
+        </div>
+      </div>
+    </div>`;
+  $("againBtn").onclick = () => {
+    done.hidden = true; $("formView").hidden = false;
+    $("event").value = ""; onEventChange();
+  };
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------- init ---------- */
+$("event").addEventListener("change", onEventChange);
+$("addBtn").addEventListener("click", () => addMember());
+
+(async () => {
+  try {
+    EVENTS = await api("/events");
+    fillSelect();
+    const pre = new URLSearchParams(location.search).get("event");
+    if (pre) { $("event").value = pre; }
+    onEventChange();
+  } catch (e) { toast(e.message); }
+})();
+</script>
+</body>
+</html>

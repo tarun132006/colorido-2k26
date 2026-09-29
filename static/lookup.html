@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find Registration | COLORIDO 2K26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+<header class="page-head"><div class="wrap">
+  <p class="eyebrow" style="color:#94a3b8">COLORIDO 2K26</p>
+  <h1>Find your registration</h1>
+  <p>Use your registration ID or email address to view your entry details.</p>
+</div></header>
+<section><div class="wrap">
+  <div class="panel-box" style="max-width:720px;margin:0 auto">
+    <form id="lookupForm" class="form-grid">
+      <div class="full"><label class="lbl" for="regId">Registration ID</label><input class="field" id="regId" placeholder="CLR26-DAN-0001"></div>
+      <div class="full" style="text-align:center;color:var(--muted)">or</div>
+      <div class="full"><label class="lbl" for="email">Email address</label><input class="field" id="email" type="email"></div>
+      <div class="full"><button class="btn btn-primary" type="submit">Find registration</button></div>
+    </form>
+    <div id="result" style="margin-top:24px"></div>
+  </div>
+</div></section>
+<div id="footer"></div>
+<script src="/js/app.js"></script>
+<script>
+renderChrome("");
+const form=document.getElementById("lookupForm"), result=document.getElementById("result");
+form.addEventListener("submit", async e=>{
+  e.preventDefault(); result.innerHTML="";
+  const id=document.getElementById("regId").value.trim().toUpperCase();
+  const email=document.getElementById("email").value.trim().toLowerCase();
+  if(!id && !email){ toast("Enter a registration ID or email."); return; }
+  try{
+    const query=id ? `?reg_id=${encodeURIComponent(id)}` : `?email=${encodeURIComponent(email)}`;
+    const rows=await api("/lookup"+query);
+    result.innerHTML=rows.map(r=>`<div class="panel-box" style="margin-bottom:0"><h2>${esc(r.event)}</h2><div class="kv"><span>Registration</span><b>${esc(r.reg_id)}</b></div><div class="kv"><span>Name</span><b>${esc(r.name)}</b></div><div class="kv"><span>College</span><b>${esc(r.college)}</b></div><div class="kv"><span>Status</span><b>${esc(r.status)}</b></div><div class="kv"><span>Day & time</span><b>Day ${esc(r.day)}, ${esc(r.start_time)}</b></div><div class="kv"><span>Venue</span><b>${esc(r.venue)}</b></div>${r.team_name?`<div class="kv"><span>Team</span><b>${esc(r.team_name)}</b></div>`:""}</div>`).join("");
+  }catch(err){ toast(err.message); }
+});
+</script>
+</body>
+</html>

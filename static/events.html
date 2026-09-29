@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Events | COLORIDO 2K26</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+
+<header class="page-head"><div class="wrap">
+  <p class="eyebrow" style="color:#94a3b8">COLORIDO 2K26</p>
+  <h1 id="title">Events</h1>
+  <p id="sub">Browse events, check the rules and register.</p>
+</div></header>
+
+<section><div class="wrap">
+  <div class="filters">
+    <input class="search" id="q" type="search" placeholder="Search events" aria-label="Search events">
+    <div class="chips" id="divChips"></div>
+    <div class="chips" id="catChips"></div>
+    <div class="chips" id="genChips"></div>
+  </div>
+  <div class="grid" id="list"></div>
+  <p class="empty" id="empty" hidden>No events match your filters.</p>
+</div></section>
+
+<div id="footer"></div>
+<script src="/js/app.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const fixedDivision = params.get("division");          // 'cultural', 'sports' or null
+const state = { division: fixedDivision || "all", cat: "All", gender: "All", q: "" };
+let ALL = [];
+
+renderChrome(fixedDivision === "sports" ? "Sports" : fixedDivision === "cultural" ? "Cultural" : "");
+const titleEl = document.getElementById("title");
+const subEl = document.getElementById("sub");
+const divChipsEl = document.getElementById("divChips");
+const catChipsEl = document.getElementById("catChips");
+const genChipsEl = document.getElementById("genChips");
+const listEl = document.getElementById("list");
+const emptyEl = document.getElementById("empty");
+if (fixedDivision === "sports") { titleEl.textContent = "Sports"; subEl.textContent = "Boys and girls tournaments. Check team sizes and match rules before registering."; }
+if (fixedDivision === "cultural") { titleEl.textContent = "Cultural Events"; subEl.textContent = "Eight categories across arts, music, dance, drama, fashion, technology and literature."; }
+
+function chips(el, items, key, labelFn = x => x) {
+  el.innerHTML = items.map(i =>
+    `<button class="chip ${state[key] === i ? "active" : ""}" data-v="${esc(i)}">${esc(labelFn(i))}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    state[key] = b.dataset.v;
+    if (key === "division") state.cat = "All";
+    draw();
+  });
+}
+
+function draw() {
+  const inDiv = ALL.filter(e => state.division === "all" || e.division === state.division);
+
+  // division chips only when the page isn't already scoped
+  if (!fixedDivision) chips(divChipsEl, ["all", "cultural", "sports"], "division",
+    x => x === "all" ? "All" : x[0].toUpperCase() + x.slice(1));
+  else divChipsEl.innerHTML = "";
+
+  const cats = ["All", ...new Set(inDiv.map(e => e.category))];
+  chips(catChipsEl, cats, "cat");
+
+  const showGender = inDiv.some(e => e.division === "sports");
+  if (showGender) chips(genChipsEl, ["All", "Boys", "Girls"], "gender"); else genChipsEl.innerHTML = "";
+
+  const q = state.q.toLowerCase();
+  const rows = inDiv.filter(e =>
+    (state.cat === "All" || e.category === state.cat) &&
+    (state.gender === "All" || e.division !== "sports" || e.gender === state.gender) &&
+    (!q || (e.name + " " + e.category + " " + e.description).toLowerCase().includes(q)));
+
+  listEl.innerHTML = rows.map(eventCard).join("");
+  emptyEl.hidden = rows.length > 0;
+  initReveal();
+}
+
+document.getElementById("q").oninput = e => { state.q = e.target.value; draw(); };
+
+(async () => {
+  try { ALL = await api("/events"); draw(); }
+  catch (e) { toast(e.message); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | COLORIDO 2K26</title>
+
+    <style>
+        :root {
+            --navy: #0f172a;
+            --ink: #1e293b;
+            --bg: #f8f7f4;
+            --card: #ffffff;
+            --line: #e5e7eb;
+            --muted: #64748b;
+            --violet: #6d5bd0;
+            --teal: #0f9d94;
+            --coral: #e8604c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        /* LOGIN */
+
+        #loginScreen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 15px 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .login-card h1 {
+            margin: 0 0 5px;
+            color: var(--navy);
+        }
+
+        .login-card p {
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .field input,
+        .filter input,
+        .filter select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            outline: none;
+        }
+
+        .field input:focus,
+        .filter input:focus,
+        .filter select:focus {
+            border-color: var(--violet);
+        }
+
+        .primary-btn {
+            width: 100%;
+            padding: 12px;
+            border: 0;
+            border-radius: 9px;
+            background: var(--navy);
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .primary-btn:hover {
+            opacity: .9;
+        }
+
+        .error {
+            color: var(--coral);
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        /* DASHBOARD */
+
+        #dashboard {
+            display: none;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid var(--line);
+            padding: 18px 25px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .brand span {
+            color: var(--coral);
+        }
+
+        .logout {
+            border: 1px solid var(--line);
+            background: white;
+            padding: 9px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat {
+            background: white;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .filters {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 20px;
+
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto auto;
+            gap: 10px;
+        }
+
+        .filter label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--muted);
+        }
+
+        .filter button {
+            height: 40px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .search-btn {
+            background: var(--navy);
+            color: white;
+        }
+
+        .export-btn {
+            background: var(--teal);
+            color: white;
+        }
+
+        .table-card {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th,
+        td {
+            padding: 13px 15px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr:hover td {
+            background: #fafafa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge.cultural {
+            background: #eeeafe;
+            color: #5b46bd;
+        }
+
+        .badge.sports {
+            background: #dff7f5;
+            color: #087b74;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 900px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 20px 12px;
+            }
+
+            header {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<section id="loginScreen">
+
+    <div class="login-card">
+
+        <h1>COLORIDO <span style="color:#e8604c;">2K26</span></h1>
+
+        <p>Administrator Dashboard</p>
+
+        <form id="loginForm">
+
+            <div class="field">
+                <label>Username</label>
+                <input
+                    id="username"
+                    type="text"
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button class="primary-btn" type="submit">
+                Login
+            </button>
+
+            <div id="loginError" class="error"></div>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<!-- DASHBOARD -->
+
+<section id="dashboard">
+
+    <header>
+
+        <div class="header-inner">
+
+            <div class="brand">
+                <h1>
+                    COLORIDO <span>2K26</span>
+                    — Admin
+                </h1>
+            </div>
+
+            <button class="logout" onclick="logout()">
+                Logout
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <!-- STATISTICS -->
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-label">
+                    Total Registrations
+                </div>
+
+                <div id="totalCount" class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Cultural
+                </div>
+
+                <div id="culturalCount" class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Sports
+                </div>
+
+                <div id="sportsCount" class="stat-value">
+                    0
+                </div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">
+                    Today's Registrations
+                </div>
+
+                <div id="todayCount" class="stat-value">
+                    0
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- FILTERS -->
+
+        <div class="filters">
+
+            <div class="filter">
+                <label>Search</label>
+
+                <input
+                    id="search"
+                    placeholder="Name, email or registration ID"
+                >
+            </div>
+
+            <div class="filter">
+                <label>Event</label>
+
+                <select id="eventFilter">
+                    <option value="">All Events</option>
+                </select>
+            </div>
+
+            <div class="filter">
+                <label>Gender</label>
+
+                <select id="genderFilter">
+                    <option value="">All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            <div class="filter">
+                <label>College</label>
+
+                <input
+                    id="collegeFilter"
+                    placeholder="College name"
+                >
+            </div>
+
+            <button
+                class="search-btn"
+                onclick="loadRegistrations()"
+            >
+                Search
+            </button>
+
+            <button
+                class="export-btn"
+                onclick="exportCSV()"
+            >
+                Export CSV
+            </button>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="table-card">
+
+            <div class="table-header">
+
+                <h2>
+                    Participant Registrations
+                </h2>
+
+                <span id="resultCount">
+                    0 records
+                </span>
+
+            </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Registration ID</th>
+                            <th>Participant</th>
+                            <th>Event</th>
+                            <th>Division</th>
+                            <th>College</th>
+                            <th>Gender</th>
+                            <th>Phone</th>
+                            <th>Team</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="registrationBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</section>
+
+
+<script>
+
+const API = "";
+
+let token = localStorage.getItem("colorido_admin_token");
+
+
+// ============================================
+// LOGIN
+// ============================================
+
+document
+    .getElementById("loginForm")
+    .addEventListener("submit", async function(e) {
+
+        e.preventDefault();
+
+        const username =
+            document.getElementById("username").value.trim();
+
+        const password =
+            document.getElementById("password").value;
+
+        const error =
+            document.getElementById("loginError");
+
+        error.textContent = "";
+
+        try {
+
+            const response = await fetch(
+                API + "/api/admin/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "Login failed"
+                );
+            }
+
+            token = data.token;
+
+            localStorage.setItem(
+                "colorido_admin_token",
+                token
+            );
+
+            showDashboard();
+
+        } catch (err) {
+
+            error.textContent =
+                err.message;
+
+        }
+
+    });
+
+
+// ============================================
+// DASHBOARD
+// ============================================
+
+function showDashboard() {
+
+    document.getElementById("loginScreen")
+        .style.display = "none";
+
+    document.getElementById("dashboard")
+        .style.display = "block";
+
+    loadEvents();
+    loadRegistrations();
+}
+
+
+// ============================================
+// LOAD EVENTS
+// ============================================
+
+async function loadEvents() {
+
+    try {
+
+        const response =
+            await fetch(API + "/api/events");
+
+        const events =
+            await response.json();
+
+        const select =
+            document.getElementById("eventFilter");
+
+        events.forEach(event => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = event.slug;
+            option.textContent = event.name;
+
+            select.appendChild(option);
+
+        });
+
+    } catch (err) {
+
+        console.error(
+            "Could not load events:",
+            err
+        );
+
+    }
+
+}
+
+
+// ============================================
+// LOAD REGISTRATIONS
+// ============================================
+
+async function loadRegistrations() {
+
+    const params =
+        new URLSearchParams();
+
+    const search =
+        document.getElementById("search").value.trim();
+
+    const event =
+        document.getElementById("eventFilter").value;
+
+    const gender =
+        document.getElementById("genderFilter").value;
+
+    const college =
+        document.getElementById("collegeFilter").value.trim();
+
+
+    if (search)
+        params.set("q", search);
+
+    if (event)
+        params.set("event_slug", event);
+
+    if (gender)
+        params.set("gender", gender);
+
+    if (college)
+        params.set("college", college);
+
+
+    try {
+
+        const response =
+            await fetch(
+                API +
+                "/api/admin/registrations?" +
+                params.toString(),
+                {
+                    headers: {
+                        "Authorization":
+                            "Bearer " + token
+                    }
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            logout();
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        renderRegistrations(
+            data.registrations
+        );
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(
+            "Could not load registrations."
+        );
+
+    }
+
+}
+
+
+// ============================================
+// RENDER TABLE
+// ============================================
+
+function renderRegistrations(rows) {
+
+    const tbody =
+        document.getElementById(
+            "registrationBody"
+        );
+
+    tbody.innerHTML = "";
+
+
+    document.getElementById(
+        "resultCount"
+    ).textContent =
+        `${rows.length} records`;
+
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="empty">
+                    No registrations found.
+                </td>
+            </tr>
+        `;
+
+        updateStats([]);
+
+        return;
+
+    }
+
+
+    rows.forEach(row => {
+
+        const tr =
+            document.createElement("tr");
+
+        const division =
+            (row.division || "")
+                .toLowerCase();
+
+        const members =
+            Array.isArray(row.members)
+                ? row.members.join(", ")
+                : "";
+
+
+        tr.innerHTML = `
+
+            <td>
+                <strong>
+                    ${escapeHTML(row.reg_id || "-")}
+                </strong>
+            </td>
+
+            <td>
+                ${escapeHTML(row.name || "-")}
+                <br>
+                <small>
+                    ${escapeHTML(row.email || "-")}
+                </small>
+            </td>
+
+            <td>
+                ${escapeHTML(row.event || "-")}
+            </td>
+
+            <td>
+                <span class="badge ${division}">
+                    ${escapeHTML(row.division || "-")}
+                </span>
+            </td>
+
+            <td>
+                ${escapeHTML(row.college || "-")}
+            </td>
+
+            <td>
+                ${escapeHTML(row.gender || "-")}
+            </td>
+
+            <td>
+                ${escapeHTML(row.phone || "-")}
+            </td>
+
+            <td>
+                ${escapeHTML(row.team_name || members || "Individual")}
+            </td>
+
+            <td>
+                ${escapeHTML(row.status || "-")}
+            </td>
+
+            <td>
+                ${formatDate(row.created_at)}
+            </td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    updateStats(rows);
+
+}
+
+
+// ============================================
+// STATISTICS
+// ============================================
+
+function updateStats(rows) {
+
+    document.getElementById(
+        "totalCount"
+    ).textContent = rows.length;
+
+
+    document.getElementById(
+        "culturalCount"
+    ).textContent =
+        rows.filter(
+            r =>
+                String(r.division)
+                    .toLowerCase()
+                === "cultural"
+        ).length;
+
+
+    document.getElementById(
+        "sportsCount"
+    ).textContent =
+        rows.filter(
+            r =>
+                String(r.division)
+                    .toLowerCase()
+                === "sports"
+        ).length;
+
+
+    const today =
+        new Date().toISOString()
+            .slice(0, 10);
+
+
+    document.getElementById(
+        "todayCount"
+    ).textContent =
+        rows.filter(
+            r =>
+                String(r.created_at)
+                    .startsWith(today)
+        ).length;
+
+}
+
+
+// ============================================
+// CSV EXPORT
+// ============================================
+
+async function exportCSV() {
+
+    const params =
+        new URLSearchParams();
+
+    const search =
+        document.getElementById("search")
+            .value.trim();
+
+    const event =
+        document.getElementById("eventFilter")
+            .value;
+
+    const gender =
+        document.getElementById("genderFilter")
+            .value;
+
+    const college =
+        document.getElementById("collegeFilter")
+            .value.trim();
+
+
+    if (search)
+        params.set("q", search);
+
+    if (event)
+        params.set("event_slug", event);
+
+    if (gender)
+        params.set("gender", gender);
+
+    if (college)
+        params.set("college", college);
+
+
+    const response =
+        await fetch(
+            API +
+            "/api/admin/export.csv?" +
+            params.toString(),
+            {
+                headers: {
+                    "Authorization":
+                        "Bearer " + token
+                }
+            }
+        );
+
+
+    if (response.status === 401) {
+
+        logout();
+
+        return;
+
+    }
+
+
+    const blob =
+        await response.blob();
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+        "colorido-registrations.csv";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+// ============================================
+// LOGOUT
+// ============================================
+
+function logout() {
+
+    localStorage.removeItem(
+        "colorido_admin_token"
+    );
+
+    token = null;
+
+    document.getElementById(
+        "dashboard"
+    ).style.display = "none";
+
+    document.getElementById(
+        "loginScreen"
+    ).style.display = "flex";
+
+}
+
+
+// ============================================
+// HELPERS
+// ============================================
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+function formatDate(value) {
+
+    if (!value)
+        return "-";
+
+    const date =
+        new Date(
+            value.replace(" ", "T") + "Z"
+        );
+
+    if (isNaN(date))
+        return value;
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+
+}
+
+
+// ============================================
+// AUTO LOGIN IF TOKEN EXISTS
+// ============================================
+
+if (token) {
+    showDashboard();
+}
+
+</script>
+
+</body>
+</html>
